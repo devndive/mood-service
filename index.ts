@@ -156,6 +156,81 @@ server.get<{ Body: null; Reply: SentimentResponseType }>('/sentiment', opts, asy
   reply.status(200).send({ data: tweets });
 });
 
+const PostSentimentRequestBody = Type.Object({
+  data: Type.Array(TweetWithSentiment)
+});
+
+type PostSentimentRequestBodyType = Static<typeof PostSentimentRequestBody>;
+
+const PostSentimentResponse = Type.Object({})
+type PostSentimentResponseType = Static<typeof PostSentimentResponse>;
+
+const postSentimentOpts: RouteShorthandOptions<Server, IncomingMessage, ServerResponse> = {
+  schema: {
+    body: {
+      type: 'object',
+      required: ['data'],
+      properties: {
+        data: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['id', 'text', 'sentiment'],
+            properties: {
+              id: { type: 'string' },
+              text: { type: 'string' },
+              sentiment: {
+                type: 'object',
+                required: ['sentiment', 'confidenceScores'],
+                properties: {
+                  sentiment: { type: 'string' },
+                  confidenceScores: {
+                    type: 'object',
+                    required: ['positive', 'neutral', 'negative'],
+                    properties: {
+                      positive: { type: 'number' },
+                      neutral: { type: 'number' },
+                      negative: { type: 'number' },
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    response: {
+      200: PostSentimentResponse,
+    }
+  }
+};
+
+server.post<{ Body: PostSentimentRequestBodyType; Reply: PostSentimentResponseType }>('/sentiment', postSentimentOpts, async (request, reply) => {
+  console.log(request.body);
+
+  const cosmosClient = new CosmosClient({
+    endpoint: server.config.COSMOS_DB_ENDPOINT || "",
+    key: server.config.COSMOS_DB_KEY,
+  });
+
+  const tweets = request.body.data;
+  for (let tweet in tweets) {
+    const tweetWithSentiment = {
+      // @ts-ignore
+      ...tweet,
+      type: "tweet",
+    };
+
+    await cosmosClient
+      .database('mood')
+      .container('tweets')
+      .items.upsert(tweetWithSentiment);
+  }
+
+  reply.status(200).send({});
+});
+
 const LastKnownTweet = Type.Object({
   id: Type.String(),
 });
@@ -207,12 +282,16 @@ server.get<{ Body: null; Reply: LastKnownTweetResponseType }>('/last-known-tweet
 
 const start = async () => {
   await server.ready();
+  server.addContentTypeParser('text/json', { parseAs: 'string' }, server.getDefaultJsonParser('ignore', 'ignore'))
+
   await server.listen(server.config.PORT, "0.0.0.0");
 
+  console.log("Redis: " + server.config.REDIS_URL);
   client = createClient({
     url: server.config.REDIS_URL,
   });
 
+  console.log(`Server listening on ${server.config.PORT}`);
   await client.connect();
 };
 
