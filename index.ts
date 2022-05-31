@@ -281,9 +281,9 @@ server.get<{ Body: null; Reply: LastKnownTweetResponseType }>('/last-known-tweet
 });
 
 const start = async () => {
-  await server.ready();
   server.addContentTypeParser('text/json', { parseAs: 'string' }, server.getDefaultJsonParser('ignore', 'ignore'))
 
+  await server.ready();
   await server.listen(server.config.PORT, "0.0.0.0");
 
   console.log("Redis: " + server.config.REDIS_URL);
