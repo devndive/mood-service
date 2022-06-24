@@ -86,10 +86,13 @@ let client = createClient({
 server.get<{ Body: null; Reply: SentimentResponseType }>('/sentiment', opts, async (request, reply) => {
   let tweets: TweetWithSentimentType[] = [];
 
-  console.time('sentiment');
-  const tweetsFromCache = await client.get('tweets');
-  console.timeLog('sentiment', 'redis');
+  const timeLabel = `request-${request.id}`;
 
+  console.time(`${timeLabel}`);
+  const tweetsFromCache = await client.get('tweets');
+  console.timeLog(`${timeLabel}`, 'redis');
+
+  console.log('tweetsFromCache', tweetsFromCache);
   if (tweetsFromCache) {
     tweets = JSON.parse(tweetsFromCache);
   }
@@ -146,13 +149,13 @@ server.get<{ Body: null; Reply: SentimentResponseType }>('/sentiment', opts, asy
 
       });
 
-      console.timeLog('sentiment', 'done mapping');
+      console.timeLog(`${timeLabel}`, 'done mapping');
       await client.set('tweets', JSON.stringify(tweets), { EX: 60 * 60 * 24 });
-      console.timeLog('sentiment', 'written to redis');
+      console.timeLog(`${timeLabel}`, 'written to redis');
     }
   }
 
-  console.timeEnd('sentiment');
+  console.timeEnd(`${timeLabel}`);
   reply.status(200).send({ data: tweets });
 });
 
