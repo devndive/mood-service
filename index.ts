@@ -218,20 +218,19 @@ server.post<{ Body: PostSentimentRequestBodyType; Reply: PostSentimentResponseTy
   });
 
   const tweets = request.body.data;
-  for (let tweet in tweets) {
-    const tweetWithSentiment = {
-      // @ts-ignore
-      ...tweet,
-      type: "tweet",
-    };
-
-    await cosmosClient
-      .database('mood')
-      .container('tweets')
-      .items.upsert(tweetWithSentiment);
+  if (tweets && tweets.length > 0) {
+    for (const tweet of tweets) {
+      await cosmosClient
+        .database('mood')
+        .container('tweets')
+        .items.upsert({
+          ...tweet,
+          type: "tweet",
+        });
+    }
   }
 
-  reply.status(200).send({});
+  reply.status(200).send({ "status": "ok" });
 });
 
 const LastKnownTweet = Type.Object({
@@ -287,7 +286,7 @@ const start = async () => {
   server.addContentTypeParser('text/json', { parseAs: 'string' }, server.getDefaultJsonParser('ignore', 'ignore'))
 
   await server.ready();
-  await server.listen(server.config.PORT, "0.0.0.0");
+  await server.listen(server.config.PORT, "::");
 
   console.log("Redis: " + server.config.REDIS_URL);
   client = createClient({
