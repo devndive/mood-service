@@ -3,7 +3,7 @@ FROM node:18-alpine AS builder
 WORKDIR /build
 
 COPY ./package.json ./package-lock.json ./index.ts ./tsconfig.json /build/
-RUN CI=true npm install
+RUN CI=true npm ci
 
 FROM node:18-alpine
 
