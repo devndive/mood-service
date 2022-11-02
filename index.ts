@@ -6,6 +6,8 @@ import { createClient } from 'redis';
 
 import { Static, Type } from '@sinclair/typebox'
 
+import metricsPlugin from 'fastify-metrics';
+
 declare module 'fastify' {
   interface FastifyInstance {
     config: {
@@ -58,7 +60,7 @@ const schema = {
     COSMOS_DB_ENDPOINT: { type: 'string' },
     COSMOS_DB_KEY: { type: 'string' },
     REDIS_URL: { type: 'string' },
-    PORT: { type: 'string', default: 3100 },
+    PORT: { type: 'number', default: 3100 },
   },
 };
 
@@ -284,11 +286,12 @@ server.get<{ Body: null; Reply: LastKnownTweetResponseType }>('/last-known-tweet
 
 const start = async () => {
   server.addContentTypeParser('text/json', { parseAs: 'string' }, server.getDefaultJsonParser('ignore', 'ignore'))
+  server.register(metricsPlugin, { endpoint: '/metrics' });
 
   await server.ready();
-  await server.listen(server.config.PORT, "::");
+  // @ts-ignore
+  server.listen({ port: server.config.PORT, host: "::" });
 
-  console.log("Redis: " + server.config.REDIS_URL);
   client = createClient({
     url: server.config.REDIS_URL,
   });
