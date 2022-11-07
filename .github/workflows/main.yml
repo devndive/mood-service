@@ -26,5 +26,7 @@ jobs:
             username: ${{ secrets.REGISTRY_USERNAME }}
             password: ${{ secrets.REGISTRY_PASSWORD }}
         - run: |
-            docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/mood/service:${{ env.RELEASE_VERSION }}
-            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/mood/service:${{ env.RELEASE_VERSION }}
+            az acr build --image mood/service:${{ env.RELEASE_VERSION }} \
+              --registry ${{ secrets.REGISTRY_NAME }} \
+              --platform Linux/arm64 \
+              --file Dockerfile .
