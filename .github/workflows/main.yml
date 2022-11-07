@@ -7,6 +7,7 @@ permissions:
 on:
   workflow_dispatch:
     branch: [ main ]
+    tags: [ 'v4' ]
   push:
     tags:
       - '*'
