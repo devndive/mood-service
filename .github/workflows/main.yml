@@ -1,6 +1,8 @@
 name: Build image and push to ACR
 
 on:
+  workflow_dispatch:
+    branch: [ main ]
   push:
     tags:
       - '*'
