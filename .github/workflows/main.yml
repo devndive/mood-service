@@ -20,6 +20,7 @@ jobs:
             creds: ${{ secrets.AZURE_CREDENTIALS }}
         - run: |
             az acr build --image mood/service:${{ env.RELEASE_VERSION }} \
+              --resource-group ${{ secrets.RESOURCE_GROUP }}
               --registry ${{ secrets.REGISTRY_NAME }} \
               --platform Linux/arm64 \
               --file Dockerfile .
