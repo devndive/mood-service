@@ -82,10 +82,7 @@ const opts: RouteShorthandOptions<Server, IncomingMessage, ServerResponse> = {
   }
 };
 
-let client = createClient({
-  url: process.env.REDIS_URL,
-});
-
+let client = createClient();
 
 server.get<{ Body: null; Reply: SentimentResponseType }>('/sentiment', opts, async (request, reply) => {
   let tweets: TweetWithSentimentType[] = [];
