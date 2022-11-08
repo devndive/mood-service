@@ -294,8 +294,10 @@ const start = async () => {
   // @ts-ignore
   server.listen({ port: server.config.PORT, host: "::" });
 
+  const REDIS_URL = `rediss://${server.config.REDIS_URL}:6380`;
+  console.log(`Connecting to redis at "${REDIS_URL}"`);
   client = createClient({
-    url: `rediss://${server.config.REDIS_URL}:6380`,
+    url: REDIS_URL,
     password: server.config.REDIS_PASSWORD,
   });
 
