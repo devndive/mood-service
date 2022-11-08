@@ -14,6 +14,7 @@ declare module 'fastify' {
       COSMOS_DB_ENDPOINT: 'string',
       COSMOS_DB_KEY: 'string',
       REDIS_URL: 'string',
+      REDIS_PASSWORD: 'string',
       PORT: 'number',
     };
   }
@@ -60,6 +61,7 @@ const schema = {
     COSMOS_DB_ENDPOINT: { type: 'string' },
     COSMOS_DB_KEY: { type: 'string' },
     REDIS_URL: { type: 'string' },
+    REDIS_PASSWORD: { type: 'string' },
     PORT: { type: 'number', default: 3100 },
   },
 };
@@ -293,11 +295,19 @@ const start = async () => {
   server.listen({ port: server.config.PORT, host: "::" });
 
   client = createClient({
-    url: server.config.REDIS_URL,
+    url: `rediss://${server.config.REDIS_URL}:6380`,
+    password: server.config.REDIS_PASSWORD,
   });
 
   console.log(`Server listening on ${server.config.PORT}`);
-  await client.connect();
+
+  try {
+    await client.connect();
+  }
+  catch(err) {
+    console.error("Logging an error");
+    console.error(err);
+  }
 };
 
 start();
