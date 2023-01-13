@@ -99,11 +99,13 @@ server.get<{ Body: null; Reply: SentimentResponseType }>('/sentiment', opts, asy
   }
 
   if (tweets.length === 0) {
+    console.log("Cosmos client init");
     const cosmosClient = new CosmosClient({
       endpoint: server.config.COSMOS_DB_ENDPOINT || "",
       key: server.config.COSMOS_DB_KEY,
     });
 
+    console.log("Defining query");
     const querySpec = {
       query: "SELECT * FROM tweets t WHERE t.type = @type",
       parameters: [
@@ -114,11 +116,13 @@ server.get<{ Body: null; Reply: SentimentResponseType }>('/sentiment', opts, asy
       ]
     };
 
+    console.log("Executing query");
     const response = await cosmosClient
-      .database('mood')
+      .database('my-mood')
       .container('tweets')
       .items.query(querySpec).fetchAll();
 
+    console.log("Checking result");
     if (response.resources.length > 0) {
       tweets = response.resources.map(tweetWithSentiment => {
 
